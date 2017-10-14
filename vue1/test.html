@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>lwy练习文件</title>
+</head>
+<body>
+<div id="app">
+    <ul>
+        <li v-for="(phone,index) in iphones"> {{phone.name}}
+            <ul>
+                <li v-for="(type,index) in phone.type"> {{type}}</li>
+            </ul>
+        </li>
+    </ul>
+    <ul>
+        <li v-for="(x,y) in school">{{y}}:{{x}}</li>
+    </ul>
+</div>
+<script src="./node_modules/vue/dist/vue.js"></script>
+<script>
+ let vm = new Vue({
+     el:'#app',
+     data:{
+         msg:'wo shi div_app',
+         fruits:['芒果','苹果','橘子'],
+         iphones:[
+             {name:'iphone 8 ',type:['黑色','白色']},
+             {name:'iphone 7 plus ',type:['红色']},
+             {name:'iphone x ',type:['黑色']}
+         ],
+         school:{address:'东大街',age:8,name:'zfpx'}
+     }
+ });
+</script>
+<!--
+用{{}}的弊端：当网速很慢或者下面的JavaScript写错时，会直接将{{message}}渲染到页面
+而使用v-text="message" 如果出错是不显示的
+所以在实际开发中用v-text比较多
+
+v-html注意 ： 你的站点上动态渲染的任意 HTML 可能会非常危险，因为它很容易导致 XSS 攻击。请只对可信内容使用 HTML 插值，绝不要对用户提供的内容插值。
+
+HTML 绑定 Vue实例，在页面加载时会闪烁
+然后才会出现 加载完成 字样，为了效果更明显，我们可以延后加载 Vue 实例
+[v-cloak] {
+  display: none;
+}
+
+在 html 中的加载点加上 v-cloak，就可以解决这一问题
+<div id="app" v-cloak>
+    {{msg}}
+</div>
+
+
+-->
+</body>
+</html>

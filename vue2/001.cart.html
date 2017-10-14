@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.css">
+</head>
+<body>
+<div id="app">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <table class="table table-bordered">
+                   <caption class="h2 text-danger text-center">购物列表</caption>
+                    <tr>
+                        <th class="text-center">全选 <input type="checkbox" v-model="selectAll" @click="all"></th>
+                        <th class="text-center">商品</th>
+                        <th class="text-center">单价</th>
+                        <th class="text-center">数量</th>
+                        <th class="text-center">小计</th>
+                        <th class="text-center">操作</th>
+                    </tr>
+                    <tr v-for="(product,index) in products">
+                        <td><input type="checkbox" v-model="product.checked" @click="checkOne"></td>
+                        <td>{{product.productName}}</td>
+                        <td>{{product.productPrice}}</td>
+                        <td><input type="text" v-model="product.productCount"></td>
+                        <td>{{product.productPrice*product.productCount | toFixed(1,'￥')}}</td>
+                        <td><button @click="remove(product)">删除</button></td>
+                    </tr>
+                    <tr>
+                        <!--sum() 这种方式 一般不会使用 因为性能低 只要页面上有任何一个数据变化sum都会重新执行 如果有人用了 那肯定是错误的-->
+                        <td colspan="6">{{sum() | toFixed(2,'￥')}}</td>
+                    </tr>
+                </table>
+                <form>
+                    <div class="form-group">
+                        <label for="productName" class="control-label">商品名称</label>
+                        <input type="text" id="productName" class="form-control" v-model="product.productName">
+                    </div>
+                    <div class="form-group">
+                        <label for="productPrice" class="control-label">商品价格</label>
+                        <input type="text" id="productPrice" class="form-control" v-model="product.productPrice">
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-danger" type="button" @click="add">添加</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="node_modules/vue/dist/vue.js"></script>
+<script src="node_modules/vue-resource/dist/vue-resource.js"></script>
+<!--vue-resource 他会将一个$http属性挂载载vm上-->
+<script>
+    //$http 是定义在vue的原型上的 实例上可以直接使用
+    let vm = new Vue({
+        el:'#app',
+        filters:{ //改变展示的结果，而且可以实现共用
+            toFixed(input,param1,param2){ //必须就是|后面的名字,
+                //input 代表的是|前面的结果 返回值则是最终展现的结果
+                return param2+parseFloat(input).toFixed(param1);
+            }
+        },
+        created(){ // created方法中一般不要放太多的代码
+            this.initData();
+        },
+        data:{
+            products:[],
+            selectAll:false,//应该不是默认为false
+            product:{
+                productName:'',//默认的商品名
+                productPrice:'',//默认的价格
+            }
+        },
+        methods:{
+            initData(){
+                //指的是vm创建完成后，数据和方法已经被声明好了，获取数据，这个方法我们叫他 钩子方法 好处 这里的this指向vm实例
+                this.$http.get('./products.json').then( (res)=> { //success
+                    //vue-resource将this改成了vm实例
+                    this.products = res.body;
+                    this.checkOne(); //数据获取成功后 判断一下是否应该全选
+                }, (err) => { //error
+                    console.log(err);
+                });
+            },
+            all(){ //全选的逻辑 如果selectAll 为true 其他人都为true 如果为false 都为false
+                this.products.forEach(item=>item.checked = this.selectAll);
+            },
+            //选择某个 有一个为false 则结果就是false
+            remove(p){ // product代表的就是某一项点击的
+                this.products = this.products.filter((item)=>item!==p);
+            },
+            checkOne(){ //找false 一个为false就false了
+                this.selectAll = this.products.every(item=>item.checked);
+            },
+            add(){ // 添加商品
+                let defaultObj = {productCount:1,checked:false};
+                //es6 方法
+                //let obj  = {};
+                //Object.assign(obj,defaultObj,this.product);
+                //es7 chrome60+ 才支持
+                this.products.push({...this.product,...defaultObj});
+                this.checkOne();
+                this.product = {productName:'',productPrice:'',}
+                //将输入框的内容变回 默认值
+            },
+            sum(){
+                return this.products.reduce((prev,next)=>prev+next.productCount*next.productPrice,0);
+            }
+        }
+    });
+</script>
+</body>
+</html>
